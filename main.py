@@ -6,7 +6,7 @@ class WeatherClient:
         self.url = _url
         self.dst_path = _dst_path
 
-    def fetch_map(self):
+    def fetch_wethermap(self):
         try:
             with urllib.request.urlopen(self.url) as web_file:
                 weather_map = web_file.read()
@@ -18,5 +18,5 @@ class WeatherClient:
             return False
 
 wc = WeatherClient("https://static.tenki.jp/static-images/radar/2022/06/27/21/35/00/pref-14-large.jpg", "data/pref-14-large.jpg")
-if not wc.fetch_map():
+if not wc.fetch_weathermap():
     print("failure fetch weather map")
