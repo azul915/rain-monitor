@@ -48,7 +48,7 @@ class MapUrl:
  
     def min_ago_string(self, min: int):
         if min % 5 != 0:
-            raise Exception("minuteが5の倍数でない")
+            raise Exception("minute is not a multiple of 5")
         ma = self.now - datetime.timedelta(minutes=min)
         year = str(ma.year)
         la_minute = int(ma.minute) - int(ma.minute % 5)
