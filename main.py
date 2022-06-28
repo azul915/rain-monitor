@@ -3,7 +3,7 @@ import datetime
 import os
 import urllib.error
 import urllib.request
-from logging import getLogger, StreamHandler, DEBUG, Formatter
+from logging import getLogger, StreamHandler, DEBUG, Formatter, setLogRecordFactory
 logger = getLogger(__name__)
 handler = StreamHandler()
 handler.setLevel(DEBUG)
@@ -40,6 +40,26 @@ class CurrentWeatherMapUrl(WeatherMapUrl):
     def __init__(self, year, month, day, hour, minute, prefecture_num):
         url = 'https://static.tenki.jp/static-images/radar/{}/{}/{}/{}/{}/00/pref-{}-large.jpg'.format(year, month, day, hour, minute, prefecture_num)
         self.value = super().__init__(url)
+
+class WeatherMap:
+    def __init__(self, _cur_time: datetime.datetime, _minute: Minute, _url: WeatherMapUrl, _prefecture: Prefecture):
+        self.cur_time = _cur_time
+        self.minute = Minute(_cur_time)
+        self.url = _url
+        self.prefecture = _prefecture
+
+    def s_year(self):
+        return str(self.cur_time.year)
+    def s_month(self):
+        return format(self.cur_time.month, '02')
+    def s_day(self):
+        return format(self.cur_time.day, '02')
+    def s_hour(self):
+        return format(self.cur_time.hour, '02')
+    def s_minute(self):
+        return self.minute.string()
+    def s_pref_num(self):
+        return self.prefecture.string()
 
 class MapUrl:
     def __init__(self, _pref: Prefecture, _now: datetime.datetime):
