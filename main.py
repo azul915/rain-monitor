@@ -1,5 +1,6 @@
 from calendar import month
 import datetime
+import os
 import urllib.error
 import urllib.request
 from logging import getLogger, StreamHandler, DEBUG, Formatter
@@ -14,9 +15,10 @@ logger.propagate = False
 
 
 class Prefecture:
-    def __init__(self, _id: int, _name: str):
+    def __init__(self, _id: str, _number: int, _disp_name: str):
         self.id = _id
-        self.name = _name
+        self.number = _number
+        self.disp_name = _disp_name
 
 class MapUrl:
     def __init__(self, _pref: Prefecture, _now: datetime.datetime):
@@ -44,7 +46,7 @@ class MapUrl:
         return format(self.la_minute(), '02')
 
     def string(self):
-        return 'https://static.tenki.jp/static-images/radar/{}/{}/{}/{}/{}/{}/pref-{}-large.jpg'.format(self.s_year(), self.s_month(), self.s_day(), self.s_hour(), self.s_minute(), '00', self.pref.id)
+        return 'https://static.tenki.jp/static-images/radar/{}/{}/{}/{}/{}/{}/pref-{}-large.jpg'.format(self.s_year(), self.s_month(), self.s_day(), self.s_hour(), self.s_minute(), '00', self.pref.number)
  
     def min_ago(self, min: int):
         if min % 5 != 0:
@@ -54,23 +56,34 @@ class MapUrl:
         mg = self.min_ago(min)
         return mg.string()
 
+class LocalImage:
+    def __init__(self, mu: MapUrl, _created_at: datetime.datetime):
+        self.name = '{}-{}-{}-{}-{}-00-pref-{}.jpg'.format(mu.s_year(), mu.s_month(), mu.s_day(), mu.s_hour(), mu.s_minute(), mu.pref.number)
+        self.created_at = mu.now
+
+    def created_at_str(self):
+        return str(self.created_at)
+
 class WeatherClient:
     def __init__(self, mapUrl: MapUrl, _dir_path: str):
         self.mapUrl = mapUrl
         self.dir_path = _dir_path
         self.maxretry = 10
 
-    def build_file_name(self):
-        return '{}-{}-{}-{}-{}-00-pref-{}.jpg'.format(self.mapUrl.s_year(), self.mapUrl.s_month(), self.mapUrl.s_day(), self.mapUrl.s_hour(), self.mapUrl.s_minute(), self.mapUrl.pref.id)
+    def path_to_file(self, li: LocalImage):
+        return '{}{}'.format(self.dir_path, li.name)
+
     def fetch_weathermap(self):
-        challenge_url = self.mapUrl.string()
+        u = self.mapUrl.string()
+        li = LocalImage(self.mapUrl, datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9), 'JST')))
         ago = 0
-        file_name = '{}-{}-{}-{}-{}-00-pref-{}.jpg'.format(self.mapUrl.s_year(), self.mapUrl.s_month(), self.mapUrl.s_day(), self.mapUrl.s_hour(), self.mapUrl.s_minute(), self.mapUrl.pref.id)
         for i in range(self.maxretry-1):
             try:
-                with urllib.request.urlopen(challenge_url) as web_file:
+                with urllib.request.urlopen(u) as web_file:
                     weather_map = web_file.read()
-                with open('{}{}'.format(self.dir_path, file_name), mode='wb') as local_file:
+                    if os.path.isfile(self.path_to_file(li)):
+                        os.remove(self.path_to_file(li))
+                with open(self.path_to_file(li), mode='wb') as local_file:
                     local_file.write(weather_map)
             except urllib.error.HTTPError as e:
                 if i == range(self.maxretry-1):
@@ -78,14 +91,28 @@ class WeatherClient:
                 else:
                     ago+=5
                     min_ago = self.mapUrl.min_ago(ago)
-                    challenge_url = min_ago.string()
+                    u = min_ago.string()
                     logger.debug(min_ago.s_minute())
-                    file_name = '{}-{}-{}-{}-{}-00-pref-{}.jpg'.format(min_ago.s_year(), min_ago.s_month(), min_ago.s_day(), min_ago.s_hour(), min_ago.s_minute(), min_ago.pref.id)
+                    li = LocalImage(min_ago, datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9), 'JST')))
                     logger.warning('retry')
             except urllib.error.URLError as e:
                 logger.fatal(e)
                 break
 
-nowMap = MapUrl(Prefecture(_id=14, _name='埼玉'), datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9), 'JST')))
-wc = WeatherClient(nowMap, "data/")
+prefectures: list[Prefecture] = [
+    Prefecture(_id = 'aomori', _number = 5, _disp_name = '青森'),
+    Prefecture(_id = 'iwate', _number = 6, _disp_name = '岩手'),
+    Prefecture(_id = 'saitama', _number = 14, _disp_name = '埼玉'),
+    Prefecture(_id = 'tokyo', _number = 16, _disp_name = '東京'),
+    Prefecture(_id = 'okinawa', _number = 50, _disp_name = '沖縄')
+]
+
+if os.getenv('PREF') == None:
+    os.environ['PREF'] = 'saitama'
+
+target_prefecture = list(filter(lambda x: x.id == os.getenv('PREF'), prefectures))[0]
+
+nowMap = MapUrl(target_prefecture, datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9), 'JST')))
+
+wc = WeatherClient(nowMap, 'data/')
 wc.fetch_weathermap()
