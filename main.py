@@ -44,7 +44,7 @@ class MapUrl:
     def s_minute(self):
         return format(self.la_minute(), '02')
 
-    def string(self):
+    def now_string(self):
         return 'https://static.tenki.jp/static-images/radar/{}/{}/{}/{}/{}/{}/pref-{}-large.jpg'.format(self.s_year(), self.s_month(), self.s_day(), self.s_hour(), self.s_minute(), '00', self.pref.number)
  
     def min_ago(self, min: int):
@@ -70,7 +70,7 @@ class WeatherClient:
         return '{}{}'.format(self.dir_path, li.name)
 
     def fetch_weathermap(self):
-        u = self.mapUrl.string()
+        u = self.mapUrl.now_string()
         li = LocalImage(self.mapUrl, datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9), 'JST')))
         ago = 0
         for i in range(self.maxretry-1):
@@ -87,7 +87,7 @@ class WeatherClient:
                 else:
                     ago+=5
                     min_ago = self.mapUrl.min_ago(ago)
-                    u = min_ago.string()
+                    u = min_ago.now_string()
                     logger.debug(min_ago.s_minute())
                     li = LocalImage(min_ago, datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9), 'JST')))
                     logger.warning('retry')
