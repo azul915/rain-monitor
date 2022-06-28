@@ -13,6 +13,10 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.propagate = False
 
+class CurrentTime:
+    def __init__(self, ct: datetime.datetime):
+        self.value = ct
+
 class Prefecture:
     def __init__(self, _id: str, _number: int, _disp_name: str):
         self.id = _id
