@@ -59,7 +59,7 @@ class WeatherMap:
     def s_minute(self):
         return self.minute.string()
     def s_pref_num(self):
-        return self.prefecture.string()
+        return self.prefecture.number
 
 class MapUrl:
     def __init__(self, _pref: Prefecture, _now: datetime.datetime):
