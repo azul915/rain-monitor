@@ -17,6 +17,15 @@ class CurrentTime:
     def __init__(self, ct: datetime.datetime):
         self.value = ct
 
+class Minute:
+    def __init__(self, dt: datetime.datetime):
+        self.dt = dt
+        self.value = dt.minute
+        self.string = str(dt.minute)
+    def last_multiple_of_five(self):
+        five_min_ago = self.dt - datetime.timedelta(minutes=5)
+        return five_min_ago.minute - five_min_ago.minute % 5
+
 class Prefecture:
     def __init__(self, _id: str, _number: int, _disp_name: str):
         self.id = _id
