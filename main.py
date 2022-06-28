@@ -32,19 +32,19 @@ class MapUrl:
         return int(self.now.hour)
     def la_minute(self):
         return int(self.now.minute) - int(self.now.minute) % 5
-    def syear(self):
+    def s_year(self):
         return str(self.now.year)
-    def smonth(self):
+    def s_month(self):
         return format(self.month(), '02')
-    def sday(self):
+    def s_day(self):
         return format(self.day(), '02')
-    def shour(self):
+    def s_hour(self):
         return format(self.hour(), '02')
-    def sminute(self):
+    def s_minute(self):
         return format(self.la_minute(), '02')
 
     def string(self):
-        return 'https://static.tenki.jp/static-images/radar/{}/{}/{}/{}/{}/{}/pref-{}-large.jpg'.format(self.syear(), self.smonth(), self.sday(), self.shour(), self.sminute(), '00', self.pref.id)
+        return 'https://static.tenki.jp/static-images/radar/{}/{}/{}/{}/{}/{}/pref-{}-large.jpg'.format(self.s_year(), self.s_month(), self.s_day(), self.s_hour(), self.s_minute(), '00', self.pref.id)
  
     def min_ago(self, min: int):
         if min % 5 != 0:
@@ -61,11 +61,11 @@ class WeatherClient:
         self.maxretry = 10
 
     def build_file_name(self):
-        return '{}-{}-{}-{}-{}-00-pref-{}.jpg'.format(self.mapUrl.syear(), self.mapUrl.smonth(), self.mapUrl.sday(), self.mapUrl.shour(), self.mapUrl.sminute(), self.mapUrl.pref.id)
+        return '{}-{}-{}-{}-{}-00-pref-{}.jpg'.format(self.mapUrl.s_year(), self.mapUrl.s_month(), self.mapUrl.s_day(), self.mapUrl.s_hour(), self.mapUrl.s_minute(), self.mapUrl.pref.id)
     def fetch_weathermap(self):
         challenge_url = self.mapUrl.string()
         ago = 0
-        file_name = '{}-{}-{}-{}-{}-00-pref-{}.jpg'.format(self.mapUrl.syear(), self.mapUrl.smonth(), self.mapUrl.sday(), self.mapUrl.shour(), self.mapUrl.sminute(), self.mapUrl.pref.id)
+        file_name = '{}-{}-{}-{}-{}-00-pref-{}.jpg'.format(self.mapUrl.s_year(), self.mapUrl.s_month(), self.mapUrl.s_day(), self.mapUrl.s_hour(), self.mapUrl.s_minute(), self.mapUrl.pref.id)
         for i in range(self.maxretry-1):
             try:
                 with urllib.request.urlopen(challenge_url) as web_file:
@@ -79,8 +79,8 @@ class WeatherClient:
                     ago+=5
                     min_ago = self.mapUrl.min_ago(ago)
                     challenge_url = min_ago.string()
-                    logger.debug(min_ago.sminute())
-                    file_name = '{}-{}-{}-{}-{}-00-pref-{}.jpg'.format(min_ago.syear(), min_ago.smonth(), min_ago.sday(), min_ago.shour(), min_ago.sminute(), min_ago.pref.id)
+                    logger.debug(min_ago.s_minute())
+                    file_name = '{}-{}-{}-{}-{}-00-pref-{}.jpg'.format(min_ago.s_year(), min_ago.s_month(), min_ago.s_day(), min_ago.s_hour(), min_ago.s_minute(), min_ago.pref.id)
                     logger.warning('retry')
             except urllib.error.URLError as e:
                 logger.fatal(e)
