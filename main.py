@@ -13,7 +13,6 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.propagate = False
 
-
 class Prefecture:
     def __init__(self, _id: str, _number: int, _disp_name: str):
         self.id = _id
@@ -107,12 +106,13 @@ prefectures: list[Prefecture] = [
     Prefecture(_id = 'okinawa', _number = 50, _disp_name = '沖縄')
 ]
 
-if os.getenv('PREF') == None:
-    os.environ['PREF'] = 'saitama'
+if __name__ == '__main__':
+    if os.getenv('PREF') == None:
+        os.environ['PREF'] = 'saitama'
 
-target_prefecture = list(filter(lambda x: x.id == os.getenv('PREF'), prefectures))[0]
+    target_prefecture = list(filter(lambda x: x.id == os.getenv('PREF'), prefectures))[0]
 
-nowMap = MapUrl(target_prefecture, datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9), 'JST')))
+    nowMap = MapUrl(target_prefecture, datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9), 'JST')))
 
-wc = WeatherClient(nowMap, 'data/')
-wc.fetch_weathermap()
+    wc = WeatherClient(nowMap, 'data/')
+    wc.fetch_weathermap()
