@@ -51,9 +51,6 @@ class MapUrl:
         if min % 5 != 0:
             raise Exception("minute is not a multiple of 5")
         return MapUrl(self.pref, self.now - datetime.timedelta(minutes=min))
-    def min_ago_string(self, min: int):
-        mg = self.min_ago(min)
-        return mg.string()
 
 class LocalImage:
     def __init__(self, mu: MapUrl, _created_at: datetime.datetime):
