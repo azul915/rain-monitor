@@ -32,7 +32,7 @@ class MapUrl:
         return int(self.now.hour)
     def la_minute(self):
         return int(self.now.minute) - int(self.now.minute) % 5
-    def syaer(self):
+    def syear(self):
         return str(self.now.year)
     def smonth(self):
         return format(self.month(), '02')
@@ -44,43 +44,48 @@ class MapUrl:
         return format(self.la_minute(), '02')
 
     def string(self):
-        return 'https://static.tenki.jp/static-images/radar/{}/{}/{}/{}/{}/{}/pref-{}-large.jpg'.format(self.syaer(), self.smonth(), self.sday(), self.shour(), self.sminute(), '00', self.pref.id)
+        return 'https://static.tenki.jp/static-images/radar/{}/{}/{}/{}/{}/{}/pref-{}-large.jpg'.format(self.syear(), self.smonth(), self.sday(), self.shour(), self.sminute(), '00', self.pref.id)
  
-    def min_ago_string(self, min: int):
+    def min_ago(self, min: int):
         if min % 5 != 0:
             raise Exception("minute is not a multiple of 5")
-        ma = self.now - datetime.timedelta(minutes=min)
-        year = str(ma.year)
-        la_minute = int(ma.minute) - int(ma.minute % 5)
-        month, day, hour, minute = list(map(lambda x: format(x, '02'), list(map(lambda x: int(x), [ma.month, ma.day, ma.hour, la_minute]))))
-        return 'https://static.tenki.jp/static-images/radar/{}/{}/{}/{}/{}/{}/pref-{}-large.jpg'.format(year, month, day, hour, minute, '00', self.pref.id)
+        return MapUrl(self.pref, self.now - datetime.timedelta(minutes=min))
+    def min_ago_string(self, min: int):
+        mg = self.min_ago(min)
+        return mg.string()
 
 class WeatherClient:
-    def __init__(self, mapUrl: MapUrl, _dst_path: str):
+    def __init__(self, mapUrl: MapUrl, _dir_path: str):
         self.mapUrl = mapUrl
-        self.dst_path = _dst_path
+        self.dir_path = _dir_path
         self.maxretry = 10
 
+    def build_file_name(self):
+        return '{}-{}-{}-{}-{}-00-pref-{}.jpg'.format(self.mapUrl.syear(), self.mapUrl.smonth(), self.mapUrl.sday(), self.mapUrl.shour(), self.mapUrl.sminute(), self.mapUrl.pref.id)
     def fetch_weathermap(self):
         challenge_url = self.mapUrl.string()
         ago = 0
+        file_name = '{}-{}-{}-{}-{}-00-pref-{}.jpg'.format(self.mapUrl.syear(), self.mapUrl.smonth(), self.mapUrl.sday(), self.mapUrl.shour(), self.mapUrl.sminute(), self.mapUrl.pref.id)
         for i in range(self.maxretry-1):
             try:
                 with urllib.request.urlopen(challenge_url) as web_file:
                     weather_map = web_file.read()
-                with open(self.dst_path, mode='wb') as local_file:
+                with open('{}{}'.format(self.dir_path, file_name), mode='wb') as local_file:
                     local_file.write(weather_map)
             except urllib.error.HTTPError as e:
                 if i == range(self.maxretry-1):
                     raise
                 else:
                     ago+=5
-                    challenge_url = self.mapUrl.min_ago_string(ago)
+                    min_ago = self.mapUrl.min_ago(ago)
+                    challenge_url = min_ago.string()
+                    logger.debug(min_ago.sminute())
+                    file_name = '{}-{}-{}-{}-{}-00-pref-{}.jpg'.format(min_ago.syear(), min_ago.smonth(), min_ago.sday(), min_ago.shour(), min_ago.sminute(), min_ago.pref.id)
                     logger.warning('retry')
             except urllib.error.URLError as e:
                 logger.fatal(e)
                 break
 
 nowMap = MapUrl(Prefecture(_id=14, _name='埼玉'), datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9), 'JST')))
-wc = WeatherClient(nowMap, "data/pref-14-large.jpg")
+wc = WeatherClient(nowMap, "data/")
 wc.fetch_weathermap()
