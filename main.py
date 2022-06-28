@@ -32,6 +32,15 @@ class Prefecture:
         self.number = _number
         self.disp_name = _disp_name
 
+class WeatherMapUrl:
+    def __init__(self, _value):
+        self.value = _value
+
+class CurrentWeatherMapUrl(WeatherMapUrl):
+    def __init__(self, year, month, day, hour, minute, prefecture_num):
+        url = 'https://static.tenki.jp/static-images/radar/{}/{}/{}/{}/{}/00/pref-{}-large.jpg'.format(year, month, day, hour, minute, prefecture_num)
+        self.value = super().__init__(url)
+
 class MapUrl:
     def __init__(self, _pref: Prefecture, _now: datetime.datetime):
         self.pref = _pref

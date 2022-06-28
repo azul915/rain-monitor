@@ -12,12 +12,12 @@ classDiagram
 		last_multiple_of_five() int
 	}
 
-	class WeatherMapUrl {
-		value str
-	}
 	class CurrentWeatherMapUrl {
 	}
 	class FutureWeatherMapUrl {
+	}
+	class WeatherMapUrl {
+		value str
 	}
 	WeatherMapUrl <|-- CurrentWeatherMapUrl
 	WeatherMapUrl <|-- FutureWeatherMapUrl
