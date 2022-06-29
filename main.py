@@ -48,21 +48,29 @@ class Prefecture:
     def num(self):
         return self.number
 
-class WeatherMapUrl:
+class WeatherMap:
     def __init__(self, ct: CurrentTime, pref: Prefecture):
         self.cur_time = ct
         self.pref = pref
 
-class CurrentWeatherMapUrl(WeatherMapUrl):
+class CurrentWeatherMap(WeatherMap):
     def __init__(self, ct: CurrentTime, pref: Prefecture):
         super().__init__(ct, pref)
-        self.value = 'https://static.tenki.jp/static-images/radar/{}/{}/{}/{}/{}/00/pref-{}-large.jpg'.format(ct.s_year(), ct.s_month(), ct.s_day(), ct.s_hour(), ct.s_minute(), pref.num())
-    def value(self):
-        return self.value
+        self.link = 'https://static.tenki.jp/static-images/radar/{}/{}/{}/{}/{}/00/pref-{}-large.jpg'.format(ct.s_year(), ct.s_month(), ct.s_day(), ct.s_hour(), ct.s_minute(), pref.num())
+    def url(self):
+        return self.link
+
+class FutureWeatherMap(WeatherMap):
+    def __init__(self, ct: CurrentTime, pref: Prefecture, relative: int):
+        super().__init__(ct, pref)
+        self.link = 'https://static.tenki.jp/static-images/rainmesh-short/{}/pref-{}-large.jpg'.format(relative, pref.num())
+    def url(self):
+        return self.link
 
 class LocalImage:
     def __init__(self, ct: CurrentTime, pref: Prefecture):
-        self.name = '{}-{}-{}-{}-{}-00-pref-{}.jpg'.format(ct.s_year(), ct.s_month(), ct.s_day(), ct.s_day(), ct.s_minute(), pref.num())
+        logger.warning(ct.s_year())
+        self.name = '{}-{}-{}-{}-{}-00-pref-{}.jpg'.format(ct.s_year(), ct.s_month(), ct.s_day(), ct.s_hour(), ct.s_minute(), pref.num())
         self.created_at = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9), 'JST'))
     def created_at_str(self):
         return str(self.created_at)
@@ -77,11 +85,11 @@ class WeatherClient:
         return self.dir_path + local_image.name
     def fetch_map(self):
         li = LocalImage(self.cur_time, self.pref)
-        cwmu = CurrentWeatherMapUrl(self.cur_time, self.pref)
+        cwmu = CurrentWeatherMap(self.cur_time, self.pref)
         for i in range(self.max_retry-1):
             try:
-                logger.debug(cwmu.value)
-                with urllib.request.urlopen(cwmu.value) as web_file:
+                logger.debug(cwmu.url())
+                with urllib.request.urlopen(cwmu.url()) as web_file:
                     weather_map = web_file.read()
                     if os.path.isfile(self.path_to_file(li)):
                         os.remove(self.path_to_file(li))
@@ -92,8 +100,28 @@ class WeatherClient:
                     raise
                 else:
                     five_minute_ago = cwmu.cur_time.last_multiple_of_five()
-                    cwmu = CurrentWeatherMapUrl(five_minute_ago, self.pref)
+                    cwmu = CurrentWeatherMap(five_minute_ago, self.pref)
                     logger.warning('retry')
+            except urllib.error.URLError as e:
+                logger.fatal(e)
+                break
+
+        for i in [10, 20, 30, 40, 50, 60]:
+
+            # x datetime.datetime
+            cur = cwmu.cur_time.value + datetime.timedelta(minutes=i)
+            li = LocalImage(cur, self.pref)
+            fwmu = FutureWeatherMap(cur, self.pref, i)
+            try:
+                with urllib.request.urlopen(fwmu.url()) as web_file:
+                    weather_map = web_file.read()
+                    if os.path.isfile(self.path_to_file(li)):
+                        os.remove(self.path_to_file(li))
+                with open(self.path_to_file(li), mode='wb') as local_file:
+                    local_file.write(weather_map)
+            except urllib.error.HTTPError as e:
+                logger.fatal(e)
+                break
             except urllib.error.URLError as e:
                 logger.fatal(e)
                 break

@@ -5,8 +5,8 @@ stateDiagram-v2
 	[*] --> Minute
 	[*] --> Prefecture
 	Minute --> CurrentTime
-	CurrentTime --> WeatherMapUrl
-	Prefecture --> WeatherMapUrl
+	CurrentTime --> WeatherMap
+	Prefecture --> WeatherMap
 
 	CurrentTime --> LocalImage
 
@@ -41,12 +41,12 @@ classDiagram
 		num() int
 	}
 
-	class WeatherMapUrl {
+	class WeatherMap {
 		cur_time CurrentTime
 		pref Prefecture
 	}
-	WeatherMapUrl <.. Prefecture
-	WeatherMapUrl <.. CurrentTime
+	WeatherMap <.. Prefecture
+	WeatherMap <.. CurrentTime
 
 	class LocalImage {
 		name: str
