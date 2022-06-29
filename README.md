@@ -16,14 +16,16 @@ stateDiagram-v2
 ```mermaid
 classDiagram
 	class Minute {
+		dt datetime.datetime
 		value int
-		string str
+		str_value str
 		last_multiple_of_five() int
 		string() str
 	}
 
 	class CurrentTime {
 		value datetime.datetime
+		minute Minute
 		s_year() str
 		s_month() str
 		s_day() str
@@ -57,7 +59,7 @@ classDiagram
 	class WeatherClient {
 		max_retry int
 		dir_path str
-		path_to_file() str
+		path_to_file(LocalImage) str
 		fetch_map() void
 	}
 ```
