@@ -1,38 +1,31 @@
 # rain-monitor
 
 ```mermaid
-classDiagram
-	class CurrentTime {
-		value datetime.datetime
-	}
+stateDiagram-v2
+	[*] --> Minute
+	[*] --> Prefecture
+	Minute --> CurrentTime
+	CurrentTime --> WeatherMapUrl
+	Prefecture --> WeatherMapUrl
+	WeatherMapUrl --> WeatherMap
 
+	CurrentTime --> LocalImage
+
+	WeatherMap --> Prefecture
+	WeatherMap --> Minute
+	WeatherClient
+```
+
+```mermaid
+classDiagram
 	class Minute {
 		value int
 		string str
 		last_multiple_of_five() int
 	}
 
-	class CurrentWeatherMapUrl {
-	}
-	class FutureWeatherMapUrl {
-	}
-	class WeatherMapUrl {
-		value str
-	}
-	WeatherMapUrl <|-- CurrentWeatherMapUrl
-	WeatherMapUrl <|-- FutureWeatherMapUrl
-
-	class Prefecture {
-		id str
-		number int
-		disp_name str
-	}
-
-	class WeatherMap {
-		cur_time CurrentTime
-		minute Minute
-		url WeatherMapUrl
-		prefecture Prefecture
+	class CurrentTime {
+		value datetime.datetime
 		s_year() str
 		s_month() str
 		s_day() str
@@ -40,21 +33,35 @@ classDiagram
 		s_ninute() str
 		s_pref_num() str
 	}
-	WeatherMap <..CurrentTime
-	WeatherMap <..Minute
-	WeatherMap <..WeatherMapUrl
-	WeatherMap <..Prefecture
+	CurrentTime <.. Minute
 
-	class WeatherClient {
-		map WeatherMap
-		max_retry int
-		dir_path str
-		fetch_map() void
+	class Prefecture {
+		id str
+		number int
+		disp_name str
 	}
-	WeatherClient <..WeatherMap
 
+	class WeatherMapUrl {
+		prefecture Prefecture
+		string() str
+	}
+	WeatherMapUrl <.. Prefecture
+	WeatherMapUrl <.. CurrentTime
+
+	class WeatherMap {
+		url WeatherMapUrl
+	}
+	WeatherMap <.. WeatherMapUrl
 	class LocalImage {
 		name: str
 		created_at: datetime.datetime
+	}
+	LocalImage <.. CurrentTime
+
+	class WeatherClient {
+		max_retry int
+		dir_path str
+		path_to_file() str
+		fetch_map() void
 	}
 ```
