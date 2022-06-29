@@ -7,12 +7,9 @@ stateDiagram-v2
 	Minute --> CurrentTime
 	CurrentTime --> WeatherMapUrl
 	Prefecture --> WeatherMapUrl
-	WeatherMapUrl --> WeatherMap
 
 	CurrentTime --> LocalImage
 
-	WeatherMap --> Prefecture
-	WeatherMap --> Minute
 	WeatherClient
 ```
 
@@ -22,6 +19,7 @@ classDiagram
 		value int
 		string str
 		last_multiple_of_five() int
+		string() str
 	}
 
 	class CurrentTime {
@@ -30,8 +28,7 @@ classDiagram
 		s_month() str
 		s_day() str
 		s_hour() str
-		s_ninute() str
-		s_pref_num() str
+		s_minute() str
 	}
 	CurrentTime <.. Minute
 
@@ -39,24 +36,23 @@ classDiagram
 		id str
 		number int
 		disp_name str
+		num() int
 	}
 
 	class WeatherMapUrl {
-		prefecture Prefecture
-		string() str
+		cur_time CurrentTime
+		pref Prefecture
 	}
 	WeatherMapUrl <.. Prefecture
 	WeatherMapUrl <.. CurrentTime
 
-	class WeatherMap {
-		url WeatherMapUrl
-	}
-	WeatherMap <.. WeatherMapUrl
 	class LocalImage {
 		name: str
 		created_at: datetime.datetime
+		created_at_str() str
 	}
 	LocalImage <.. CurrentTime
+	LocalImage <.. Prefecture
 
 	class WeatherClient {
 		max_retry int
