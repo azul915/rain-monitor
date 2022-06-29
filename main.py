@@ -1,9 +1,8 @@
-from calendar import month
 import datetime
 import os
 import urllib.error
 import urllib.request
-from logging import getLogger, StreamHandler, DEBUG, Formatter, setLogRecordFactory
+from logging import getLogger, StreamHandler, DEBUG, Formatter
 logger = getLogger(__name__)
 handler = StreamHandler()
 handler.setLevel(DEBUG)
